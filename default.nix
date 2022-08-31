@@ -20,34 +20,49 @@ let
 
 pact-info = {
   branch = "jose/gas-log-enable";
-  rev = "294ec1d4868265589f42e5659e2a99777848a7b7";
-  sha256 = "1rrig16zrcj3fvi7ndchz952wzz687hflvcg2klxgs1m7ywpki9v";
+  rev = "55acb208b1eaa9d0890e2b09a5f5d242bc75bf5f";
+  sha256 = "17bz1hlrz7mp63hah90zrn3ppc89hq8jzd5mvfh2d731pg7q0q4l";
 };
 
 pact = pkgs.haskell.lib.compose.justStaticExecutables
   (import (pkgs.fetchFromGitHub {
      owner = "kadena-io";
      repo = "pact";
-     # rev = "294ec1d4868265589f42e5659e2a99777848a7b7";
-     # sha256 = "1rrig16zrcj3fvi7ndchz952wzz687hflvcg2klxgs1m7ywpki9v";
+     # rev = "55acb208b1eaa9d0890e2b09a5f5d242bc75bf5f";
+     # sha256 = "17bz1hlrz7mp63hah90zrn3ppc89hq8jzd5mvfh2d731pg7q0q4l";
      inherit (pact-info) rev sha256;
-     # date = "2022-08-31T16:23:48-04:00";
+     # date = "2022-08-31T17:38:49-04:00";
    }) {});
 
+chainweb-node-src = pkgs.stdenv.mkDerivation rec {
+  name = "chainweb-node-src-${version}";
+  version = "2.16";
+
+  src = pkgs.fetchFromGitHub {
+    owner = "kadena-io";
+    repo = "chainweb-node";
+    rev = "71eb31f431739fff962e24dae4b28a6fcdd5f543";
+    sha256 = "1mi25pcdmgi70c2ahwkazkfjsfrxsjy1v7n38drknma9j1j2h05a";
+    # date = "2022-08-29T10:41:38+02:00";
+  };
+
+  phases = [ "unpackPhase" "buildPhase" "installPhase" ];
+
+  buildPhase = ''
+    sed -i -e 's%"branch": ".*",%"branch": "${pact-info.branch}",%' dep/pact/github.json
+    sed -i -e 's%"rev": ".*",%"rev": "${pact-info.rev}",%' dep/pact/github.json
+    sed -i -e 's%"sha256": ".*"%"sha256": "${pact-info.sha256}"%' dep/pact/github.json
+    cat dep/pact/github.json
+  '';
+
+  installPhase = ''
+    mkdir -p $out
+    cp -pR * $out
+  '';
+};
+
 chainweb-node = pkgs.haskell.lib.compose.justStaticExecutables
-  ((import (pkgs.fetchFromGitHub {
-      owner = "kadena-io";
-      repo = "chainweb-node";
-      rev = "71eb31f431739fff962e24dae4b28a6fcdd5f543";
-      sha256 = "1mi25pcdmgi70c2ahwkazkfjsfrxsjy1v7n38drknma9j1j2h05a";
-      # date = "2022-08-29T10:41:38+02:00";
-    }) {}).overrideAttrs(_: {
-      preBuild = ''
-        sed -i -e 's%"branch": ".*",%"branch": "${pact-info.branch}",%' dep/pact/github.json
-        sed -i -e 's%"rev": ".*",%"rev": "${pact-info.rev}",%' dep/pact/github.json
-        sed -i -e 's%"sha256": ".*",%"sha256": "${pact-info.sha256}",%' dep/pact/github.json
-      '';
-    }));
+  (import "${chainweb-node-src}" {});
 
 chainweb-data-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
@@ -81,6 +96,7 @@ configFile = toYAML "chainweb-node.config" {
     };
 
     logger = {
+      # log_level = "info";
       log_level = "debug";
     };
 
@@ -90,6 +106,7 @@ configFile = toYAML "chainweb-node.config" {
           value = "cut-monitor";
           level = "info"; }
       ];
+      # default = "error";
       default = "debug";
     };
   };
