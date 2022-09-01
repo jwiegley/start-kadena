@@ -12,39 +12,59 @@ args@{
 
 let
 
-# pact-info = {
-#   branch = "master";
-#   rev = "d15d87d5b0375169264a9b97cacfe1e51a10ff6e";
-#   sha256 = "0jwif9vkna4ysw5f552qi4z1z4lxkg0nyxz2h2wax9zx6jxq9ca3";
-# };
-
 pact-info = {
-  branch = "jose/gas-log-enable";
-  rev = "55acb208b1eaa9d0890e2b09a5f5d242bc75bf5f";
-  sha256 = "17bz1hlrz7mp63hah90zrn3ppc89hq8jzd5mvfh2d731pg7q0q4l";
+  branch = "master";
+  rev = "4fc970ffc1a8fc41769920c88dc4818f4b5380cb";
+  sha256 = "01rz4mn5p4q5wv40qajw5gsbbw7z5q1sfxc1fg9hvlv2iv7f8ahl";
+};
+
+pact-src = pkgs.fetchFromGitHub {
+  owner = "kadena-io";
+  repo = "pact";
+  # rev = "4fc970ffc1a8fc41769920c88dc4818f4b5380cb";
+  # sha256 = "01rz4mn5p4q5wv40qajw5gsbbw7z5q1sfxc1fg9hvlv2iv7f8ahl";
+  inherit (pact-info) rev sha256;
+  # date = "2022-08-31T16:17:05-06:00";
+};
+
+# pact-src = ~/kadena/current/pact;
+
+pact-drv = pkgs.stdenv.mkDerivation rec {
+  name = "pact-drv-${version}";
+  version = "4.4";
+
+  src = pact-src;
+
+  phases = [ "unpackPhase" "buildPhase" "installPhase" ];
+
+  buildPhase = ''
+    cp ${./pact.nix} default.nix
+  '';
+
+  installPhase = ''
+    mkdir -p $out
+    cp -pR * $out
+  '';
 };
 
 pact = pkgs.haskell.lib.compose.justStaticExecutables
-  (import (pkgs.fetchFromGitHub {
-     owner = "kadena-io";
-     repo = "pact";
-     # rev = "55acb208b1eaa9d0890e2b09a5f5d242bc75bf5f";
-     # sha256 = "17bz1hlrz7mp63hah90zrn3ppc89hq8jzd5mvfh2d731pg7q0q4l";
-     inherit (pact-info) rev sha256;
-     # date = "2022-08-31T17:38:49-04:00";
-   }) {});
+  (import "${pact-drv}" {});
 
-chainweb-node-src = pkgs.stdenv.mkDerivation rec {
-  name = "chainweb-node-src-${version}";
+chainweb-node-src = pkgs.fetchFromGitHub {
+  owner = "kadena-io";
+  repo = "chainweb-node";
+  rev = "71eb31f431739fff962e24dae4b28a6fcdd5f543";
+  sha256 = "1mi25pcdmgi70c2ahwkazkfjsfrxsjy1v7n38drknma9j1j2h05a";
+  # date = "2022-08-29T10:41:38+02:00";
+};
+
+# chainweb-node-src = ~/kadena/chainweb-node;
+
+chainweb-node-drv = pkgs.stdenv.mkDerivation rec {
+  name = "chainweb-node-drv-${version}";
   version = "2.16";
 
-  src = pkgs.fetchFromGitHub {
-    owner = "kadena-io";
-    repo = "chainweb-node";
-    rev = "71eb31f431739fff962e24dae4b28a6fcdd5f543";
-    sha256 = "1mi25pcdmgi70c2ahwkazkfjsfrxsjy1v7n38drknma9j1j2h05a";
-    # date = "2022-08-29T10:41:38+02:00";
-  };
+  src = chainweb-node-src;
 
   phases = [ "unpackPhase" "buildPhase" "installPhase" ];
 
@@ -62,7 +82,11 @@ chainweb-node-src = pkgs.stdenv.mkDerivation rec {
 };
 
 chainweb-node = pkgs.haskell.lib.compose.justStaticExecutables
-  (import "${chainweb-node-src}" {});
+  ((import "${chainweb-node-drv}" {}).overrideAttrs(_: {
+      preBuild = ''
+        sed -i -e 's/2_965_885/2_939_323/' src/Chainweb/Version.hs
+      '';
+    }));
 
 chainweb-data-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
@@ -96,8 +120,8 @@ configFile = toYAML "chainweb-node.config" {
     };
 
     logger = {
-      # log_level = "info";
-      log_level = "debug";
+      log_level = "info";
+      # log_level = "debug";
     };
 
     filter = {
@@ -106,8 +130,8 @@ configFile = toYAML "chainweb-node.config" {
           value = "cut-monitor";
           level = "info"; }
       ];
-      # default = "error";
-      default = "debug";
+      default = "error";
+      # default = "debug";
     };
   };
 
@@ -120,7 +144,7 @@ configFile = toYAML "chainweb-node.config" {
   };
 };
 
-in with pkgs; stdenv.mkDerivation rec {
+start-kadena = with pkgs; stdenv.mkDerivation rec {
   name = "start-kadena-${version}";
   version = "2.16";
 
@@ -173,12 +197,41 @@ if [[ ! -d $NODE/mainnet01 ]]; then
 fi
 
 exec ${tmux}/bin/tmux new-session \; \
-  send-keys "cd $NODE && ${chainweb-node}/bin/chainweb-node --config-file ${configFile} --disable-node-mining" C-m \; \
+  send-keys "\
+    cd $NODE && \
+    ${chainweb-node}/bin/chainweb-node \
+      --config-file ${configFile} \
+      --disable-node-mining \
+      --bootstrap-reachability 0 \
+      --p2p-port=1790 \
+  " C-m \; \
   split-window -v \; \
-  send-keys "sleep 30 ; cd $DATA && ${chainweb-data}/bin/chainweb-data server --port 9696 -f --service-host=127.0.0.1 --service-port=1848 --p2p-host=127.0.0.1 --p2p-port=1789 --dbhost 192.168.1.69 --dbuser=$(whoami) --dbname=chainweb-data -m" C-m \;
+  send-keys "\
+    sleep 30 ; \
+    cd $DATA && \
+    ${chainweb-data}/bin/chainweb-data server \
+      --port 9696 \
+      -f \
+      --service-host=127.0.0.1 \
+      --service-port=1848 \
+      --p2p-host=127.0.0.1 \
+      --p2p-port=1790 \
+      --dbhost 127.0.0.1 \
+      --dbuser=$(whoami) \
+      --dbname=chainweb-data \
+      -m \
+    " C-m \;
 EOF
     chmod +x $out/bin/start-kadena
   '';
 
   env = pkgs.buildEnv { inherit name; paths = buildInputs; };
+};
+
+in {
+  inherit
+    pact-src pact-drv pact
+    chainweb-node-src chainweb-node-drv chainweb-node
+    chainweb-data-src chainweb-data
+    start-kadena;
 }
