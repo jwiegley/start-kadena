@@ -204,6 +204,7 @@ exec ${tmux}/bin/tmux new-session \; \
       --disable-node-mining \
       --bootstrap-reachability 0 \
       --p2p-port=1790 \
+      2>&1 | tee chainweb-node.log \
   " C-m \; \
   split-window -v \; \
   send-keys "\
