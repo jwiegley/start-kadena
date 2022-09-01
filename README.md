@@ -35,3 +35,15 @@ utility like `watch` or `GeekTool` to monitor the output of this command:
     "http://127.0.0.1:1848/chainweb/0.0/mainnet01/cut" \
     | jq -r '.height / 20 | floor | tostring | [while(length>0; .[:-3]) | .[-3:]] | reverse | join(",")'
 ```
+
+## TODO
+
+Items left to be done:
+
+- An attribute for building a local devnet docker image, and a script for
+  starting a container based on that image, for local development testing.
+
+- An attribute that builds a script for performing mainnet replay tests.
+
+- An attribute that builds a script to start the devnet from above, and run
+  the full integration test suite against it.
