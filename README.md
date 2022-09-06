@@ -3,7 +3,7 @@
 This is the Nix magic that I use locally on my macOS machine to run a Kadena
 node plus chainweb-data for collecting network information. Basic use:
 
-1. Start a local postgresql server, and follow the instructions after
+1. Start a local postgresql server, and follow the instructions if
    chainweb-data fails the first time.
 
 2. Make sure that port 1790 on your public facing firewall redirect TCP/UDP

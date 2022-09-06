@@ -97,7 +97,12 @@ chainweb-data-src = pkgs.fetchFromGitHub {
 };
 
 chainweb-data = pkgs.haskell.lib.compose.justStaticExecutables
-  (import chainweb-data-src {});
+  ((import chainweb-data-src {}).overrideAttrs (_: {
+     preConfigure = ''
+       sed -i -e 's/ghc-options:    -threaded/-- ghc-options:    -threaded/' \
+           chainweb-data.cabal
+     '';
+   }));
 
 toYAML = name: data:
   pkgs.writeText name (pkgs.lib.generators.toYAML {} data);
@@ -168,22 +173,22 @@ start-kadena = with pkgs; stdenv.mkDerivation rec {
 NODE=$HOME/.local/share/chainweb-node
 DATA=$HOME/.local/share/chainweb-data
 
-# if [[ ! -f "$DATA/pgdata/PG_VERSION" ]]; then
-#     mkdir -p $DATA/pgdata
-#     ${postgresql}/bin/pg_ctl -D "$DATA/pgdata" initdb
-# fi
+if [[ ! -f "$DATA/pgdata/PG_VERSION" ]]; then
+    mkdir -p $DATA/pgdata
+    ${postgresql}/bin/pg_ctl -D "$DATA/pgdata" initdb
+fi
 
-# if ! ${postgresql}/bin/pg_ctl -D "$DATA/pgdata" status; then
-#     ${postgresql}/bin/pg_ctl -D "$DATA/pgdata" \
-#         -l $DATA/chainweb-pgdata.log start
-#     sleep 5
-#     ${postgresql}/bin/createdb chainweb-data || echo "OK: db already exists"
-# fi
+if ! ${postgresql}/bin/pg_ctl -D "$DATA/pgdata" status; then
+    ${postgresql}/bin/pg_ctl -D "$DATA/pgdata" \
+        -l $DATA/chainweb-pgdata.log start
+    sleep 5
+    ${postgresql}/bin/createdb chainweb-data || echo "OK: db already exists"
+fi
 
-# if ! ${postgresql}/bin/pg_ctl -D "$DATA/pgdata" status; then
-#     echo "Postgres failed to start; see $DATA/chainweb-pgdata.log"
-#     exit 1
-# fi
+if ! ${postgresql}/bin/pg_ctl -D "$DATA/pgdata" status; then
+    echo "Postgres failed to start; see $DATA/chainweb-pgdata.log"
+    exit 1
+fi
 
 cd $DATA
 
