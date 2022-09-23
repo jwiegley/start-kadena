@@ -389,7 +389,7 @@ start-devnet = with pkgs; stdenv.mkDerivation rec {
 
   installPhase = ''
     mkdir -p $out/bin
-    cat <<EOF > $out/bin/start-devnet
+    cat <<'EOF' > $out/bin/start-devnet
 #!${bash}/bin/bash
 
 TESTS=$(mktemp -d -t integration-tests-XXX)
@@ -455,7 +455,7 @@ run-integration-tests = with pkgs; stdenv.mkDerivation rec {
 
   installPhase = ''
     mkdir -p $out/bin
-    cat <<EOF > $out/bin/run-integration-tests
+    cat <<'EOF' > $out/bin/run-integration-tests
 #!${bash}/bin/bash
 
 TESTS=$(mktemp -d -t integration-tests-XXX)
