@@ -107,9 +107,9 @@ chainweb-node-src = pkgs.fetchFromGitHub {
 chainweb-data-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "chainweb-data";
-  rev = "5d815a70c544eead5964ba4e84d8f71fb8977300";
-  sha256 = "111mczhhq7fqk784raa7zg1g9fd2gknph01265hyf4vzmxgr0y6r";
-  # date = "2022-08-04T20:20:13-07:00";
+  rev = "52f865935255ff8124b815e67c7c9cbb250c82eb";
+  sha256 = "04lc1km36klgyahp2af8djnxd35lhsjr377a8r5n24i0jfrbadkq";
+  # date = "2022-09-23T13:01:11-07:00";
 };
 
 # integration-tests-src = pkgs.fetchFromGitHub {
@@ -374,6 +374,50 @@ run-chainweb-replay = with pkgs; stdenv.mkDerivation rec {
   '';
 };
 
+start-devnet = with pkgs; stdenv.mkDerivation rec {
+  name = "start-devnet-${version}";
+  version = "1.0";
+
+  src = ./.;
+
+  propagatedBuildInputs = [
+    integration-tests-deps
+    nodejs-14_x
+  ];
+
+  phases = [ "installPhase" ];
+
+  installPhase = ''
+    mkdir -p $out/bin
+    cat <<EOF > $out/bin/start-devnet
+#!${bash}/bin/bash
+
+TESTS=$(mktemp -d -t integration-tests-XXX)
+
+mkdir -p "$TESTS/devnet"
+
+cp -pR "${devnet-drv}"/.env "$TESTS/devnet"
+cp -pR "${devnet-drv}"/* "$TESTS/devnet"
+
+cd "$TESTS/devnet"
+
+DEVNET=$(docker ps --filter 'name=devnet' | wc -l)
+if (( DEVNET < 4 )); then
+    cd devnet
+    docker compose pull
+    docker compose build pact
+    docker compose build chainweb-node
+    echo "Starting Devnet in $TESTS/devnet"
+    docker compose up -d
+    cd ..
+else
+    echo Devnet appears to already be running
+fi
+EOF
+    chmod +x $out/bin/start-devnet
+  '';
+};
+
 integration-tests = with pkgs; stdenv.mkDerivation rec {
   name = "integration-tests-${version}";
   version = "1.0";
@@ -402,15 +446,10 @@ integration-tests-deps =
   (import "${integration-tests}" { inherit pkgs; }).nodeDependencies;
 
 run-integration-tests = with pkgs; stdenv.mkDerivation rec {
-  name = "integration-tests-${version}";
+  name = "run-integration-tests-${version}";
   version = "1.0";
 
   src = ./.;
-
-  propagatedBuildInputs = [
-    integration-tests-deps
-    nodejs-14_x
-  ];
 
   phases = [ "installPhase" ];
 
@@ -418,38 +457,25 @@ run-integration-tests = with pkgs; stdenv.mkDerivation rec {
     mkdir -p $out/bin
     cat <<EOF > $out/bin/run-integration-tests
 #!${bash}/bin/bash
-EOF
-    cat <<'EOF' >> $out/bin/run-integration-tests
+
 TESTS=$(mktemp -d -t integration-tests-XXX)
 
 export NODE_PATH=${integration-tests-deps}/lib/node_modules
 
 mkdir -p "$TESTS"
-mkdir -p "$TESTS/devnet"
 
 ln -s "$NODE_PATH" "$TESTS"
-cp -pR "${devnet-drv}"/.env "$TESTS/devnet"
-cp -pR "${devnet-drv}"/* "$TESTS/devnet"
 cp -pR "${integration-tests-src}"/.taprc "$TESTS"
 cp -pR "${integration-tests-src}"/* "$TESTS"
 
 cd "$TESTS"
 
-DEVNET=$(docker ps --filter 'name=devnet' | wc -l)
-if (( DEVNET < 4 )); then
-    cd devnet
-    docker compose pull
-    docker compose build pact
-    docker compose build chainweb-node
-    docker compose up -d
-    cd ..
-fi
-
 if ${nodejs-14_x}/bin/npm run test
 then
-    rm -fr "$TESTS"
+    # rm -fr "$TESTS"
+    echo "Successful test results are in $TESTS"
 else
-    echo "Test results are in $TESTS"
+    echo "Failed test results are in $TESTS"
 fi
 EOF
     chmod +x $out/bin/run-integration-tests
@@ -459,10 +485,8 @@ EOF
 in {
   inherit
     pact-drv pact
-
     chainweb-node-drv chainweb-node run-chainweb-replay
-
     chainweb-data startup-script start-kadena
-
+    start-devnet
     integration-tests run-integration-tests;
 }
