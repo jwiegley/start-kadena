@@ -7,6 +7,19 @@ args@{
     inherit sha256; }) {
     config.allowUnfree = true;
     config.allowBroken = false;
+    overlays = [
+      (self: super: {
+         tbb = super.tbb.overrideAttrs(attrs: {
+           patches = attrs.patches ++ [
+             (super.fetchurl {
+               name = "aarch64-darwin.patch";
+               url = "https://github.com/oneapi-src/oneTBB/pull/258/commits/86f6dcdc17a8f5ef2382faaef860cfa5243984fe.patch";
+               sha256 = "sha256-JXqrFPCb3q1vfxk752tQu7HhApCB4YH2LoVnGRwmspk=";
+             })
+           ];
+         });
+       })
+    ];
   }
 
 , node-db-dir         ? "$HOME/.local/share/chainweb-node/mainnet01"
@@ -16,8 +29,7 @@ args@{
 , node-p2p-port       ? 1790
 , node-service-port   ? 1848
 
-, replay-db-dir       ?
-  "/Volumes/G-DRIVE/ChainState/kadena/chainweb-node-replay/mainnet01"
+, replay-db-dir       ? "$HOME/.local/share/chainweb-node-replay/mainnet01"
 , replay-p2p-port     ? 1791
 , replay-service-port ? 1884
 }:
@@ -72,6 +84,10 @@ replay-node-options = {
   service-port = replay-service-port;
 };
 
+# .../bin/chainweb-node --config-file chainweb-replay.config --disable-node-mining --bootstrap-reachability 0 --p2p-port=1791 --service-port=1884 --database-directory $PWD/chainweb-node-replay/mainnet01 > chainweb-replay.log 2>&1
+
+# egrep "pact db synchronized" chainweb-replay.log | wc -l
+
 ##########################################################################
 #
 # Source code for Pact, Chainweb and other components
@@ -79,17 +95,17 @@ replay-node-options = {
 
 pact-info = {
   branch = "master";
-  rev = "4fc970ffc1a8fc41769920c88dc4818f4b5380cb";
-  sha256 = "01rz4mn5p4q5wv40qajw5gsbbw7z5q1sfxc1fg9hvlv2iv7f8ahl";
+  rev = "d15d87d5b0375169264a9b97cacfe1e51a10ff6e";
+  sha256 = "0jwif9vkna4ysw5f552qi4z1z4lxkg0nyxz2h2wax9zx6jxq9ca3";
 };
 
 pact-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "pact";
   inherit (pact-info) rev sha256;
-  # rev = "4fc970ffc1a8fc41769920c88dc4818f4b5380cb";
-  # sha256 = "01rz4mn5p4q5wv40qajw5gsbbw7z5q1sfxc1fg9hvlv2iv7f8ahl";
-  # date = "2022-08-31T16:17:05-06:00";
+  # rev = "d15d87d5b0375169264a9b97cacfe1e51a10ff6e";
+  # sha256 = "0jwif9vkna4ysw5f552qi4z1z4lxkg0nyxz2h2wax9zx6jxq9ca3";
+  # date = "2022-08-26T22:49:01-07:00";
 };
 
 # pact-src = ~/kadena/current/pact;
@@ -97,9 +113,9 @@ pact-src = pkgs.fetchFromGitHub {
 chainweb-node-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "chainweb-node";
-  rev = "71eb31f431739fff962e24dae4b28a6fcdd5f543";
-  sha256 = "1mi25pcdmgi70c2ahwkazkfjsfrxsjy1v7n38drknma9j1j2h05a";
-  # date = "2022-08-29T10:41:38+02:00";
+  rev = "b64db9c419f43c628a1fedb8bc9a37daa9a103bb";
+  sha256 = "16afzl2ig0m1fhbvbhkwicjrbsrjc7pw0h9c0wf7n4dfby9n5ymr";
+  # date = "2022-09-29T08:45:41-07:00";
 };
 
 # chainweb-node-src = ~/kadena/chainweb-node;
@@ -157,7 +173,7 @@ pact-drv = pkgs.stdenv.mkDerivation rec {
 };
 
 pact = pkgs.haskell.lib.compose.justStaticExecutables
-  (import "${pact-drv}" {});
+  (pkgs.haskell.lib.compose.dontCheck (pkgs.callPackage "${pact-drv}" {}));
 
 chainweb-node-drv = pkgs.stdenv.mkDerivation rec {
   name = "chainweb-node-drv-${version}";
@@ -181,14 +197,14 @@ chainweb-node-drv = pkgs.stdenv.mkDerivation rec {
 };
 
 chainweb-node = pkgs.haskell.lib.compose.justStaticExecutables
-  ((import "${chainweb-node-drv}" {}).overrideAttrs(_: {
+  ((pkgs.callPackage "${chainweb-node-drv}" {}).overrideAttrs(_: {
       preBuild = ''
         sed -i -e 's/2_965_885/2_939_323/' src/Chainweb/Version.hs
       '';
     }));
 
 chainweb-data = pkgs.haskell.lib.compose.justStaticExecutables
-  ((import chainweb-data-src {}).overrideAttrs (_: {
+  ((pkgs.callPackage chainweb-data-src {}).overrideAttrs (_: {
      preConfigure = ''
        sed -i -e 's/ghc-options:    -threaded/-- ghc-options:    -threaded/' \
            chainweb-data.cabal
@@ -406,7 +422,6 @@ if (( DEVNET < 4 )); then
     cd devnet
     docker compose pull
     docker compose build pact
-    docker compose build chainweb-node
     echo "Starting Devnet in $TESTS/devnet"
     docker compose up -d
     cd ..
@@ -443,7 +458,7 @@ integration-tests = with pkgs; stdenv.mkDerivation rec {
 };
 
 integration-tests-deps =
-  (import "${integration-tests}" { inherit pkgs; }).nodeDependencies;
+  (pkgs.callPackage "${integration-tests}" {}).nodeDependencies;
 
 run-integration-tests = with pkgs; stdenv.mkDerivation rec {
   name = "run-integration-tests-${version}";
