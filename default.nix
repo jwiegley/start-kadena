@@ -22,14 +22,17 @@ args@{
     ];
   }
 
-, node-db-dir         ? "$HOME/.local/share/chainweb-node/mainnet01"
-, node-log-file       ? "$HOME/Library/Logs/chainweb-node.log"
-, data-db-dir         ? "$HOME/.local/share/chainweb-data"
-, data-log-file       ? "$HOME/Library/Logs/chainweb-data.log"
+, home                ? "/Users/johnw"
+
+, node-db-dir         ? "${home}/.local/share/chainweb-node/mainnet01"
+, node-log-file       ? "${home}/Library/Logs/chainweb-node.log"
+, data-db-dir         ? "${home}/.local/share/chainweb-data"
+, data-log-file       ? "${home}/Library/Logs/chainweb-data.log"
 , node-p2p-port       ? 1790
 , node-service-port   ? 1848
 
-, replay-db-dir       ? "$HOME/.local/share/chainweb-node-replay/mainnet01"
+, replay-db-dir       ? "${home}/.local/share/chainweb-node-replay/mainnet01"
+, replay-log-file     ? "${home}/Library/Logs/chainweb-node-replay.log"
 , replay-p2p-port     ? 1791
 , replay-service-port ? 1884
 }:
@@ -84,8 +87,6 @@ replay-node-options = {
   service-port = replay-service-port;
 };
 
-# .../bin/chainweb-node --config-file chainweb-replay.config --disable-node-mining --bootstrap-reachability 0 --p2p-port=1791 --service-port=1884 --database-directory $PWD/chainweb-node-replay/mainnet01 > chainweb-replay.log 2>&1
-
 # egrep "pact db synchronized" chainweb-replay.log | wc -l
 
 ##########################################################################
@@ -95,17 +96,17 @@ replay-node-options = {
 
 pact-info = {
   branch = "master";
-  rev = "d15d87d5b0375169264a9b97cacfe1e51a10ff6e";
-  sha256 = "0jwif9vkna4ysw5f552qi4z1z4lxkg0nyxz2h2wax9zx6jxq9ca3";
+  rev = "63c1d79474f0e1179003f603b685ce07ec6013b1";
+  sha256 = "0hhq1yslz324spabmrlma9qi1mgrqpwck8ilb467k9jnycfc1s61";
 };
 
 pact-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "pact";
   inherit (pact-info) rev sha256;
-  # rev = "d15d87d5b0375169264a9b97cacfe1e51a10ff6e";
-  # sha256 = "0jwif9vkna4ysw5f552qi4z1z4lxkg0nyxz2h2wax9zx6jxq9ca3";
-  # date = "2022-08-26T22:49:01-07:00";
+  # rev = "63c1d79474f0e1179003f603b685ce07ec6013b1";
+  # sha256 = "0hhq1yslz324spabmrlma9qi1mgrqpwck8ilb467k9jnycfc1s61";
+  # date = "2022-10-11T19:36:30-04:00";
 };
 
 # pact-src = ~/kadena/current/pact;
@@ -123,9 +124,9 @@ chainweb-node-src = pkgs.fetchFromGitHub {
 chainweb-data-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "chainweb-data";
-  rev = "52f865935255ff8124b815e67c7c9cbb250c82eb";
-  sha256 = "04lc1km36klgyahp2af8djnxd35lhsjr377a8r5n24i0jfrbadkq";
-  # date = "2022-09-23T13:01:11-07:00";
+  rev = "565457c696130d87434374cffb24aee97644589d";
+  sha256 = "0bsdzpfw9niwq7vhlljb62q6gd8pw1cgr49facan63n1wmkcwyn5";
+  # date = "2022-10-27T13:49:57-04:00";
 };
 
 # integration-tests-src = pkgs.fetchFromGitHub {
@@ -211,25 +212,7 @@ chainweb-data = pkgs.haskell.lib.compose.justStaticExecutables
      '';
    }));
 
-devnet-drv = pkgs.stdenv.mkDerivation rec {
-  name = "devnet-drv-${version}";
-  version = "1.0";
-
-  src = devnet-src;
-
-  phases = [ "unpackPhase" "buildPhase" "installPhase" ];
-
-  buildPhase = ''
-  '';
-
-  installPhase = ''
-    mkdir -p $out
-    cp -pR .env $out
-    cp -pR * $out
-  '';
-};
-
-##########################################################################
+#########################################################################
 #
 # Configuration files for Chainweb-node
 #
@@ -275,7 +258,7 @@ configFile = defaultLogLevel: chainweb: toYAML "chainweb-node.config" {
 };
 
 options-to-str = opts: with pkgs.lib;
-    "--config-file ${primary-node-config} "
+    "--config-file ${opts.config-file} "
     # Note that ${opts.database-directory} cannot be used here, or it would
     # copy the entire directory into the Nix store.
   + "--database-directory '" + opts.database-directory + "' "
@@ -290,7 +273,7 @@ options-to-str = opts: with pkgs.lib;
 # Scripts, the primary output of this Nix file
 #
 
-startup-script = with pkgs; writeText "start-kadena.sh" ''
+startup-chainweb-data = with pkgs; writeText "start-chainweb-data.sh" ''
 #!${bash}/bin/bash
 
 DATA="${builtins.toString data-db-dir}"
@@ -319,34 +302,80 @@ if [[ ! -f scripts/richlist.sh ]]; then
     cp ${src}/scripts/richlist.sh scripts/richlist.sh
 fi
 
+${chainweb-data}/bin/chainweb-data server \
+  --port 9696 \
+  -f \
+  --service-host=127.0.0.1 \
+  --service-port=${builtins.toString primary-node-options.service-port} \
+  --p2p-host=127.0.0.1 \
+  --p2p-port=${builtins.toString primary-node-options.p2p-port} \
+  --dbhost 127.0.0.1 \
+  --dbuser=$(whoami) \
+  --dbname=chainweb-data \
+  -m
+'';
+
+start-chainweb-data = with pkgs; stdenv.mkDerivation rec {
+  name = "start-chainweb-data-${version}";
+  version = "2.16";
+
+  src = chainweb-data-src;
+
+  buildInputs = [
+    postgresql
+    chainweb-data
+  ];
+
+  phases = [ "installPhase" ];
+
+  installPhase = ''
+    mkdir -p $out/bin
+    cp -p ${startup-chainweb-data} $out/bin/start-chainweb-data
+    chmod +x $out/bin/start-chainweb-data
+  '';
+};
+
+startup-chainweb-node = with pkgs; writeText "start-chainweb-node.sh" ''
+#!${bash}/bin/bash
+
 NODE=$(dirname "${builtins.toString node-db-dir}")
 if [[ ! -d ${builtins.toString node-db-dir} ]]; then
     mkdir -p "$NODE"
 fi
 
+cd "$NODE"
+
+${chainweb-node}/bin/chainweb-node \
+  ${options-to-str primary-node-options} \
+  > ${builtins.toString node-log-file} 2>&1
+'';
+
+start-chainweb-node = with pkgs; stdenv.mkDerivation rec {
+  name = "start-chainweb-node-${version}";
+  version = "2.16";
+
+  src = chainweb-data-src;
+
+  buildInputs = [
+    chainweb-node
+  ];
+
+  phases = [ "installPhase" ];
+
+  installPhase = ''
+    mkdir -p $out/bin
+    cp -p ${startup-chainweb-node} $out/bin/start-chainweb-node
+    chmod +x $out/bin/start-chainweb-node
+  '';
+};
+
+startup-script = with pkgs; writeText "start-kadena.sh" ''
+#!${bash}/bin/bash
+
 exec ${tmux}/bin/tmux new-session \; \
-  send-keys "\
-    cd \"$NODE\" && \
-    ${chainweb-node}/bin/chainweb-node \
-      ${options-to-str primary-node-options} \
-      2>&1 | tee ${builtins.toString node-log-file} \
-  " C-m \; \
+  send-keys "${pkgs.bash} ${startup-chainweb-node}" C-m \; \
   split-window -v \; \
-  send-keys "\
-    sleep 30 ; \
-    cd \"$DATA\" && \
-    ${chainweb-data}/bin/chainweb-data server \
-      --port 9696 \
-      -f \
-      --service-host=127.0.0.1 \
-      --service-port=${builtins.toString primary-node-options.service-port} \
-      --p2p-host=127.0.0.1 \
-      --p2p-port=${builtins.toString primary-node-options.p2p-port} \
-      --dbhost 127.0.0.1 \
-      --dbuser=$(whoami) \
-      --dbname=chainweb-data \
-      -m \
-    " C-m \;
+  send-keys "sleep 30 ; ${pkgs.bash} ${startup-chainweb-data}" C-m \;
 '';
 
 start-kadena = with pkgs; stdenv.mkDerivation rec {
@@ -356,10 +385,8 @@ start-kadena = with pkgs; stdenv.mkDerivation rec {
   src = chainweb-data-src;
 
   buildInputs = [
-    chainweb-node
-    postgresql
-    chainweb-data
-    tmux
+    start-chainweb-node
+    start-chainweb-data
   ];
 
   phases = [ "installPhase" ];
@@ -370,6 +397,21 @@ start-kadena = with pkgs; stdenv.mkDerivation rec {
     chmod +x $out/bin/start-kadena
   '';
 };
+
+replay-script = with pkgs; writeText "run-chainweb-replay.sh" ''
+#!${bash}/bin/bash
+
+NODE=$(dirname "${builtins.toString replay-db-dir}")
+if [[ ! -d ${builtins.toString replay-db-dir} ]]; then
+    mkdir -p "$NODE"
+fi
+
+cd "$NODE"
+
+${chainweb-node}/bin/chainweb-node \
+  ${options-to-str replay-node-options} \
+  > ${builtins.toString replay-log-file} 2>&1
+'';
 
 run-chainweb-replay = with pkgs; stdenv.mkDerivation rec {
   name = "replay-kadena-${version}";
@@ -385,8 +427,8 @@ run-chainweb-replay = with pkgs; stdenv.mkDerivation rec {
 
   installPhase = ''
     mkdir -p $out/bin
-    cp -p ${startup-script} $out/bin/start-kadena
-    chmod +x $out/bin/start-kadena
+    cp -p ${replay-script} $out/bin/run-chainweb-replay
+    chmod +x $out/bin/run-chainweb-replay
   '';
 };
 
@@ -396,9 +438,7 @@ start-devnet = with pkgs; stdenv.mkDerivation rec {
 
   src = ./.;
 
-  propagatedBuildInputs = [
-    integration-tests-deps
-    nodejs-14_x
+  buildInputs = [
   ];
 
   phases = [ "installPhase" ];
@@ -408,21 +448,17 @@ start-devnet = with pkgs; stdenv.mkDerivation rec {
     cat <<'EOF' > $out/bin/start-devnet
 #!${bash}/bin/bash
 
-TESTS=$(mktemp -d -t integration-tests-XXX)
+DEVNET_DIR=$(mktemp -d -t dev-XXX)
 
-mkdir -p "$TESTS/devnet"
-
-cp -pR "${devnet-drv}"/.env "$TESTS/devnet"
-cp -pR "${devnet-drv}"/* "$TESTS/devnet"
-
-cd "$TESTS/devnet"
+cp -p "${devnet-src}"/.env "$DEVNET_DIR"
+cp -pR "${devnet-src}"/* "$DEVNET_DIR"
 
 DEVNET=$(docker ps --filter 'name=devnet' | wc -l)
 if (( DEVNET < 4 )); then
-    cd devnet
+    cd "$DEVNET_DIR"
     docker compose pull
     docker compose build pact
-    echo "Starting Devnet in $TESTS/devnet"
+    echo "Starting Devnet in $DEVNET_DIR ..."
     docker compose up -d
     cd ..
 else
@@ -501,7 +537,10 @@ in {
   inherit
     pact-drv pact
     chainweb-node-drv chainweb-node run-chainweb-replay
-    chainweb-data startup-script start-kadena
-    start-devnet
-    integration-tests run-integration-tests;
+    chainweb-data
+    startup-chainweb-node startup-chainweb-data startup-script
+    start-chainweb-node start-chainweb-data start-kadena
+    devnet-src start-devnet
+    # integration-tests run-integration-tests
+    ;
 }
