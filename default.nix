@@ -96,17 +96,17 @@ replay-node-options = {
 
 pact-info = {
   branch = "master";
-  rev = "63c1d79474f0e1179003f603b685ce07ec6013b1";
-  sha256 = "0hhq1yslz324spabmrlma9qi1mgrqpwck8ilb467k9jnycfc1s61";
+  rev = "2c66028f23bd4984f2268406ed8e3fe6f3a15639";
+  sha256 = "1c6y95isy23yzhlvhg6njb58k1yy76fdk7vf9b4myvffvq22m1qv";
 };
 
 pact-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "pact";
   inherit (pact-info) rev sha256;
-  # rev = "63c1d79474f0e1179003f603b685ce07ec6013b1";
-  # sha256 = "0hhq1yslz324spabmrlma9qi1mgrqpwck8ilb467k9jnycfc1s61";
-  # date = "2022-10-11T19:36:30-04:00";
+  # rev = "2c66028f23bd4984f2268406ed8e3fe6f3a15639";
+  # sha256 = "1c6y95isy23yzhlvhg6njb58k1yy76fdk7vf9b4myvffvq22m1qv";
+  # date = "2022-11-14T15:22:41-08:00";
 };
 
 # pact-src = ~/kadena/current/pact;
@@ -114,9 +114,9 @@ pact-src = pkgs.fetchFromGitHub {
 chainweb-node-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "chainweb-node";
-  rev = "b64db9c419f43c628a1fedb8bc9a37daa9a103bb";
-  sha256 = "16afzl2ig0m1fhbvbhkwicjrbsrjc7pw0h9c0wf7n4dfby9n5ymr";
-  # date = "2022-09-29T08:45:41-07:00";
+  rev = "87dc1c008fbc97ece58f5105b23b987fadcc6749";
+  sha256 = "06ri9ba0bpqcq7lb5j9wz7wb28ad50k6n1n99xxzm71p480sl3vi";
+  # date = "2022-11-16T10:19:20-08:00";
 };
 
 # chainweb-node-src = ~/kadena/chainweb-node;
@@ -124,9 +124,9 @@ chainweb-node-src = pkgs.fetchFromGitHub {
 chainweb-data-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "chainweb-data";
-  rev = "565457c696130d87434374cffb24aee97644589d";
-  sha256 = "0bsdzpfw9niwq7vhlljb62q6gd8pw1cgr49facan63n1wmkcwyn5";
-  # date = "2022-10-27T13:49:57-04:00";
+  rev = "2af09890b9c565acb940fa87635aa4a9133d17d0";
+  sha256 = "1fxx3svjpwhm7qy4j8yw3lshn2cjdwgvbvpq81sn3f0xndqjp4ms";
+  # date = "2022-11-16T12:05:38-08:00";
 };
 
 # integration-tests-src = pkgs.fetchFromGitHub {
