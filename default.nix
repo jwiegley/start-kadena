@@ -129,6 +129,14 @@ chainweb-data-src = pkgs.fetchFromGitHub {
   # date = "2022-11-16T12:05:38-08:00";
 };
 
+chainweb-mining-client-src = pkgs.fetchFromGitHub {
+  owner = "kadena-io";
+  repo = "chainweb-mining-client";
+  rev = "1f96d4ae2a7243defb3a13270e0ac58e6b56725f";
+  sha256 = "1q2msby9llczln4l5rqwl845w4ypqqq4ngz4ms0y4w50g99s12dg";
+  # date = "2022-11-23T16:37:40-08:00";
+};
+
 # integration-tests-src = pkgs.fetchFromGitHub {
 #   private = true;
 #   owner = "kadena-io";
@@ -211,6 +219,9 @@ chainweb-data = pkgs.haskell.lib.compose.justStaticExecutables
            chainweb-data.cabal
      '';
    }));
+
+chainweb-mining-client = pkgs.haskell.lib.compose.justStaticExecutables
+  (pkgs.callPackage chainweb-mining-client-src {});
 
 #########################################################################
 #
@@ -302,7 +313,7 @@ if [[ ! -f scripts/richlist.sh ]]; then
     cp ${src}/scripts/richlist.sh scripts/richlist.sh
 fi
 
-${chainweb-data}/bin/chainweb-data server \
+exec ${chainweb-data}/bin/chainweb-data server \
   --port 9696 \
   -f \
   --service-host=127.0.0.1 \
@@ -335,6 +346,30 @@ start-chainweb-data = with pkgs; stdenv.mkDerivation rec {
   '';
 };
 
+startup-chainweb-mining-client = with pkgs; writeText "start-chainweb-mining-client.sh" ''
+#!${bash}/bin/bash
+exec ${chainweb-mining-client}/bin/chainweb-mining-client ARGS
+'';
+
+start-chainweb-mining-client = with pkgs; stdenv.mkDerivation rec {
+  name = "start-chainweb-mining-client-${version}";
+  version = "0.5";
+
+  src = chainweb-mining-client-src;
+
+  buildInputs = [
+    chainweb-mining-client
+  ];
+
+  phases = [ "installPhase" ];
+
+  installPhase = ''
+    mkdir -p $out/bin
+    cp -p ${startup-chainweb-mining-client} $out/bin/start-chainweb-mining-client
+    chmod +x $out/bin/start-chainweb-mining-client
+  '';
+};
+
 startup-chainweb-node = with pkgs; writeText "start-chainweb-node.sh" ''
 #!${bash}/bin/bash
 
@@ -345,7 +380,7 @@ fi
 
 cd "$NODE"
 
-${chainweb-node}/bin/chainweb-node \
+exec ${chainweb-node}/bin/chainweb-node \
   ${options-to-str primary-node-options} \
   > ${builtins.toString node-log-file} 2>&1
 '';
@@ -408,7 +443,7 @@ fi
 
 cd "$NODE"
 
-${chainweb-node}/bin/chainweb-node \
+exec ${chainweb-node}/bin/chainweb-node \
   ${options-to-str replay-node-options} \
   > ${builtins.toString replay-log-file} 2>&1
 '';
@@ -538,8 +573,12 @@ in {
     pact-drv pact
     chainweb-node-drv chainweb-node run-chainweb-replay
     chainweb-data
+    chainweb-mining-client
     startup-chainweb-node startup-chainweb-data startup-script
-    start-chainweb-node start-chainweb-data start-kadena
+    start-chainweb-node
+    start-chainweb-data
+    start-chainweb-mining-client
+    start-kadena
     devnet-src start-devnet
     # integration-tests run-integration-tests
     ;
