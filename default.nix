@@ -65,6 +65,7 @@ replay-node-config = configFile "info" {
   allowReadsInLocal = true;
   headerStream = true;
   onlySyncPact = true;
+  gasLog = false;
   validateHashesOnReplay = true;
   cuts = {
     pruneChainDatabase = "headers-checked";
@@ -114,9 +115,9 @@ pact-src = pkgs.fetchFromGitHub {
 chainweb-node-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "chainweb-node";
-  rev = "87dc1c008fbc97ece58f5105b23b987fadcc6749";
-  sha256 = "06ri9ba0bpqcq7lb5j9wz7wb28ad50k6n1n99xxzm71p480sl3vi";
-  # date = "2022-11-16T10:19:20-08:00";
+  rev = "aaf1a20a7721f78a5b9f793276d0c4fdfde5cfa0";
+  sha256 = "01hqzsk9gm5s5b32c2kkp0lg3h6krkib6r2vq9d1daswjpayj3xg";
+  # date = "2022-12-03T13:15:52-08:00";
 };
 
 # chainweb-node-src = ~/kadena/chainweb-node;
@@ -124,9 +125,9 @@ chainweb-node-src = pkgs.fetchFromGitHub {
 chainweb-data-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "chainweb-data";
-  rev = "2af09890b9c565acb940fa87635aa4a9133d17d0";
-  sha256 = "1fxx3svjpwhm7qy4j8yw3lshn2cjdwgvbvpq81sn3f0xndqjp4ms";
-  # date = "2022-11-16T12:05:38-08:00";
+  rev = "cf1596357028b15a63f41bff052bf373e7b34761";
+  sha256 = "00086l86r0zj89sxg9aha8rjia9crfv4gx6245z3bm109cb77f00";
+  # date = "2023-02-02T17:42:44-08:00";
 };
 
 chainweb-mining-client-src = pkgs.fetchFromGitHub {
@@ -157,6 +158,14 @@ devnet-src = pkgs.fetchFromGitHub {
   sha256 = "1rhinp5535iscnfaix4z1bmz5l3w6k4x4ha2j5q44cih9xwd3i94";
   # date = "2022-09-22T16:59:12-07:00";
 };
+
+kda-tool = pkgs.callPackage (pkgs.fetchFromGitHub {
+  owner = "kadena-io";
+  repo = "kda-tool";
+  rev = "82276930fa47a0eb47409d562025804b2b40f3cd";
+  sha256 = "1143zjsdcl0qj0b86isb2qjdh06nmvy5gksk27qybjc5fbpp5r58";
+  # date = "2022-12-07T18:47:59-04:00";
+}) {};
 
 ##########################################################################
 #
@@ -581,5 +590,6 @@ in {
     start-kadena
     devnet-src start-devnet
     # integration-tests run-integration-tests
+    kda-tool
     ;
 }
