@@ -125,9 +125,9 @@ chainweb-node-src = pkgs.fetchFromGitHub {
 chainweb-data-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "chainweb-data";
-  rev = "cf1596357028b15a63f41bff052bf373e7b34761";
-  sha256 = "00086l86r0zj89sxg9aha8rjia9crfv4gx6245z3bm109cb77f00";
-  # date = "2023-02-02T17:42:44-08:00";
+  rev = "6f1ff4783b8602d24113bdf4f735f2d71b7cf126";
+  sha256 = "14xn25is5ifklnj8yyg5n6krixnivwl1h454psnj541ajzdqqc82";
+  # date = "2023-02-14T09:33:42-05:00";
 };
 
 chainweb-mining-client-src = pkgs.fetchFromGitHub {
