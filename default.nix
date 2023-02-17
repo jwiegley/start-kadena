@@ -97,17 +97,17 @@ replay-node-options = {
 
 pact-info = {
   branch = "master";
-  rev = "2c66028f23bd4984f2268406ed8e3fe6f3a15639";
-  sha256 = "1c6y95isy23yzhlvhg6njb58k1yy76fdk7vf9b4myvffvq22m1qv";
+  rev = "5f5aa8ee7e0a88fead9c8ac5b8cf047ef456a1e4";
+  sha256 = "0b3f1g93x1252h9l4qjdi74qscn1wpnyaqf2bx81yl22qd0kj274";
 };
 
 pact-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "pact";
   inherit (pact-info) rev sha256;
-  # rev = "2c66028f23bd4984f2268406ed8e3fe6f3a15639";
-  # sha256 = "1c6y95isy23yzhlvhg6njb58k1yy76fdk7vf9b4myvffvq22m1qv";
-  # date = "2022-11-14T15:22:41-08:00";
+  # rev = "5f5aa8ee7e0a88fead9c8ac5b8cf047ef456a1e4";
+  # sha256 = "0b3f1g93x1252h9l4qjdi74qscn1wpnyaqf2bx81yl22qd0kj274";
+  # date = "2023-02-10T17:49:08-08:00";
 };
 
 # pact-src = ~/kadena/current/pact;
@@ -115,9 +115,9 @@ pact-src = pkgs.fetchFromGitHub {
 chainweb-node-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "chainweb-node";
-  rev = "aaf1a20a7721f78a5b9f793276d0c4fdfde5cfa0";
-  sha256 = "01hqzsk9gm5s5b32c2kkp0lg3h6krkib6r2vq9d1daswjpayj3xg";
-  # date = "2022-12-03T13:15:52-08:00";
+  rev = "19b34e51cfaced917ba602d892891d74f76b1dcf";
+  sha256 = "1av727fb4hhjqrjqkf5zmg4n7wxmgi1pldiqxr5lg09hddqpanz4";
+  # date = "2023-02-14T15:16:44-08:00";
 };
 
 # chainweb-node-src = ~/kadena/chainweb-node;
@@ -133,9 +133,9 @@ chainweb-data-src = pkgs.fetchFromGitHub {
 chainweb-mining-client-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "chainweb-mining-client";
-  rev = "1f96d4ae2a7243defb3a13270e0ac58e6b56725f";
-  sha256 = "1q2msby9llczln4l5rqwl845w4ypqqq4ngz4ms0y4w50g99s12dg";
-  # date = "2022-11-23T16:37:40-08:00";
+  rev = "ae6e108ab221157198026f1a4d11976591b4e6ee";
+  sha256 = "0wv3hc83w7ywskzpglfvhr0janaicmld414396b0g3as65xln4p1";
+  # date = "2022-12-19T14:45:49+01:00";
 };
 
 # integration-tests-src = pkgs.fetchFromGitHub {
@@ -149,14 +149,14 @@ chainweb-mining-client-src = pkgs.fetchFromGitHub {
 
 # Because this is a private GitHub repository, the simplest thing is to use a
 # local clone.
-integration-tests-src = ~/kadena/integration-tests;
+integration-tests-src = ~/kadena/repos/integration-tests;
 
 devnet-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "devnet";
-  rev = "488399c7a493f94888793f4e2b61b966f8b77e48";
-  sha256 = "1rhinp5535iscnfaix4z1bmz5l3w6k4x4ha2j5q44cih9xwd3i94";
-  # date = "2022-09-22T16:59:12-07:00";
+  rev = "818fd5c6fca5f3d8d917fa8d7c2d4093c19a642f";
+  sha256 = "19w065m1vbxy92yck4n12s4ghclxcj6w7l2hsb8bylinpm0619c1";
+  # date = "2022-12-15T11:59:24-05:00";
 };
 
 kda-tool = pkgs.callPackage (pkgs.fetchFromGitHub {
@@ -221,13 +221,7 @@ chainweb-node = pkgs.haskell.lib.compose.justStaticExecutables
       '';
     }));
 
-chainweb-data = pkgs.haskell.lib.compose.justStaticExecutables
-  ((pkgs.callPackage chainweb-data-src {}).overrideAttrs (_: {
-     preConfigure = ''
-       sed -i -e 's/ghc-options:    -threaded/-- ghc-options:    -threaded/' \
-           chainweb-data.cabal
-     '';
-   }));
+chainweb-data = (import chainweb-data-src).default;
 
 chainweb-mining-client = pkgs.haskell.lib.compose.justStaticExecutables
   (pkgs.callPackage chainweb-mining-client-src {});
