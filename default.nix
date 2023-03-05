@@ -125,9 +125,9 @@ chainweb-node-src = pkgs.fetchFromGitHub {
 chainweb-data-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "chainweb-data";
-  rev = "6f1ff4783b8602d24113bdf4f735f2d71b7cf126";
-  sha256 = "14xn25is5ifklnj8yyg5n6krixnivwl1h454psnj541ajzdqqc82";
-  # date = "2023-02-14T09:33:42-05:00";
+  rev = "5e21686370166b778f3072e4bb4de779b40b39ee";
+  sha256 = "137rffkv6pwkc3xc2psxfzddhf72abq24m5m5cya74hny5y3zmkv";
+  # date = "2023-02-23T19:21:40+01:00";
 };
 
 chainweb-mining-client-src = pkgs.fetchFromGitHub {
@@ -195,7 +195,7 @@ pact = pkgs.haskell.lib.compose.justStaticExecutables
 
 chainweb-node-drv = pkgs.stdenv.mkDerivation rec {
   name = "chainweb-node-drv-${version}";
-  version = "2.16";
+  version = "2.18";
 
   src = chainweb-node-src;
 
@@ -221,7 +221,25 @@ chainweb-node = pkgs.haskell.lib.compose.justStaticExecutables
       '';
     }));
 
-chainweb-data = (import chainweb-data-src).default;
+chainweb-data-drv = pkgs.stdenv.mkDerivation rec {
+  name = "chainweb-data-drv-${version}";
+  version = "2.18";
+
+  src = chainweb-data-src;
+
+  phases = [ "unpackPhase" "buildPhase" "installPhase" ];
+
+  buildPhase = ''
+    sed -i -e 's%default: True%default: False%' haskell-src/chainweb-data.cabal
+  '';
+
+  installPhase = ''
+    mkdir -p $out
+    cp -pR * $out
+  '';
+};
+
+chainweb-data = (import "${chainweb-data-drv}" {}).default;
 
 chainweb-mining-client = pkgs.haskell.lib.compose.justStaticExecutables
   (pkgs.callPackage chainweb-mining-client-src {});
@@ -327,11 +345,13 @@ exec ${chainweb-data}/bin/chainweb-data server \
   --dbuser=$(whoami) \
   --dbname=chainweb-data \
   -m
+  +RTS
+  -N1
 '';
 
 start-chainweb-data = with pkgs; stdenv.mkDerivation rec {
   name = "start-chainweb-data-${version}";
-  version = "2.16";
+  version = "2.18";
 
   src = chainweb-data-src;
 
@@ -390,9 +410,9 @@ exec ${chainweb-node}/bin/chainweb-node \
 
 start-chainweb-node = with pkgs; stdenv.mkDerivation rec {
   name = "start-chainweb-node-${version}";
-  version = "2.16";
+  version = "2.18";
 
-  src = chainweb-data-src;
+  src = chainweb-node-src;
 
   buildInputs = [
     chainweb-node
@@ -418,7 +438,7 @@ exec ${tmux}/bin/tmux new-session \; \
 
 start-kadena = with pkgs; stdenv.mkDerivation rec {
   name = "start-kadena-${version}";
-  version = "2.16";
+  version = "2.18";
 
   src = chainweb-data-src;
 
@@ -575,7 +595,7 @@ in {
   inherit
     pact-drv pact
     chainweb-node-drv chainweb-node run-chainweb-replay
-    chainweb-data
+    chainweb-data-drv chainweb-data
     chainweb-mining-client
     startup-chainweb-node startup-chainweb-data startup-script
     start-chainweb-node
