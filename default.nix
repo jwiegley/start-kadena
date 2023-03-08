@@ -31,10 +31,10 @@ args@{
 , node-p2p-port       ? 1790
 , node-service-port   ? 1848
 
-, replay-db-dir       ? "${home}/.local/share/chainweb-node-replay/mainnet01"
+, replay-db-dir       ? "/Volumes/studio/ChainState/kadena/chainweb-node-baseline/mainnet01"
 , replay-log-file     ? "${home}/Library/Logs/chainweb-node-replay.log"
-, replay-p2p-port     ? 1791
-, replay-service-port ? 1884
+, replay-p2p-port     ? 1790
+, replay-service-port ? 1848
 }:
 
 let
@@ -47,8 +47,8 @@ let
 primary-node-config = configFile "error" {
   allowReadsInLocal = true;
   headerStream = true;
-  throttling = {
-    global = 10000;
+  p2p = {
+    bootstrapReachability = 0;
   };
 };
 
@@ -56,7 +56,6 @@ primary-node-options = {
   config-file = "${primary-node-config}";
   database-directory = node-db-dir;
   disable-node-mining = true;
-  bootstrap-reachability = 0;
   p2p-port = node-p2p-port;
   service-port = node-service-port;
 };
@@ -65,7 +64,7 @@ replay-node-config = configFile "info" {
   allowReadsInLocal = true;
   headerStream = true;
   onlySyncPact = true;
-  gasLog = false;
+  gasLog = true;
   validateHashesOnReplay = true;
   cuts = {
     pruneChainDatabase = "headers-checked";
@@ -76,6 +75,7 @@ replay-node-config = configFile "info" {
   p2p = {
     private = true;
     ignoreBootstrapNodes = true;
+    bootstrapReachability = 0;
   };
 };
 
@@ -83,12 +83,9 @@ replay-node-options = {
   config-file = "${replay-node-config}";
   database-directory = replay-db-dir;
   disable-node-mining = true;
-  bootstrap-reachability = 0;
   p2p-port = replay-p2p-port;
   service-port = replay-service-port;
 };
-
-# egrep "pact db synchronized" chainweb-replay.log | wc -l
 
 ##########################################################################
 #
@@ -97,27 +94,37 @@ replay-node-options = {
 
 pact-info = {
   branch = "master";
-  rev = "5f5aa8ee7e0a88fead9c8ac5b8cf047ef456a1e4";
-  sha256 = "0b3f1g93x1252h9l4qjdi74qscn1wpnyaqf2bx81yl22qd0kj274";
+  rev = "b8636a6f8295ad1b448f8af2a5297284c3e02e14";
+  sha256 = "1696j9lqpd91j9nl3sdmj92zm740h0d4z62caj9axw3l1c464srm";
 };
 
 pact-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "pact";
   inherit (pact-info) rev sha256;
-  # rev = "5f5aa8ee7e0a88fead9c8ac5b8cf047ef456a1e4";
-  # sha256 = "0b3f1g93x1252h9l4qjdi74qscn1wpnyaqf2bx81yl22qd0kj274";
-  # date = "2023-02-10T17:49:08-08:00";
+  # rev = "b8636a6f8295ad1b448f8af2a5297284c3e02e14";
+  # sha256 = "1696j9lqpd91j9nl3sdmj92zm740h0d4z62caj9axw3l1c464srm";
+  # date = "2023-03-05T21:39:45+01:00";
 };
 
-# pact-src = ~/kadena/current/pact;
+# pact-src = ~/kadena/pact;
+
+# pact-lsp-src = pkgs.fetchFromGitHub {
+#   owner = "kadena-io";
+#   repo = "pact-lsp";
+#   rev = "913449b9fc4fce09d2e90109adce211dc7cfd220";
+#   sha256 = "1xx6w1a08ihylp485kalklr876fjx8lx3rx030qhnb83x8ixz7ii";
+#   # date = "2023-03-06T08:18:17+01:00";
+# };
+
+pact-lsp-src = ~/kadena/pact-lsp;
 
 chainweb-node-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "chainweb-node";
-  rev = "19b34e51cfaced917ba602d892891d74f76b1dcf";
-  sha256 = "1av727fb4hhjqrjqkf5zmg4n7wxmgi1pldiqxr5lg09hddqpanz4";
-  # date = "2023-02-14T15:16:44-08:00";
+  rev = "09b4dc65fe02ddaabe65f0ffaf7952fd2ca0c657";
+  sha256 = "1s26lxd18kv27qpl3sb1bm7wmidw0zc4dgj6q83zydsqmc8fp45a";
+  # date = "2023-03-06T12:13:26-08:00";
 };
 
 # chainweb-node-src = ~/kadena/chainweb-node;
@@ -192,6 +199,22 @@ pact-drv = pkgs.stdenv.mkDerivation rec {
 
 pact = pkgs.haskell.lib.compose.justStaticExecutables
   (pkgs.haskell.lib.compose.dontCheck (pkgs.callPackage "${pact-drv}" {}));
+
+pact-lsp-drv = pkgs.stdenv.mkDerivation rec {
+  name = "pact-lsp-drv-${version}";
+  version = "4.4";
+
+  src = pact-lsp-src;
+
+  phases = [ "unpackPhase" "installPhase" ];
+
+  installPhase = ''
+    mkdir -p $out
+    cp -pR * $out
+  '';
+};
+
+pact-lsp = (import "${pact-lsp-drv}").default;
 
 chainweb-node-drv = pkgs.stdenv.mkDerivation rec {
   name = "chainweb-node-drv-${version}";
@@ -295,7 +318,6 @@ options-to-str = opts: with pkgs.lib;
     # copy the entire directory into the Nix store.
   + "--database-directory '" + opts.database-directory + "' "
   + optionalString opts.disable-node-mining "--disable-node-mining "
-  + "--bootstrap-reachability ${builtins.toString opts.bootstrap-reachability} "
   + "--p2p-port ${builtins.toString opts.p2p-port} "
   + "--service-port ${builtins.toString opts.service-port} "
 ;
@@ -594,6 +616,7 @@ EOF
 in {
   inherit
     pact-drv pact
+    pact-lsp-drv pact-lsp
     chainweb-node-drv chainweb-node run-chainweb-replay
     chainweb-data-drv chainweb-data
     chainweb-mining-client
