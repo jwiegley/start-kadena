@@ -31,7 +31,7 @@ args@{
 , node-p2p-port       ? 1790
 , node-service-port   ? 1848
 
-, replay-db-dir       ? "/Volumes/studio/ChainState/kadena/chainweb-node-baseline/mainnet01"
+, replay-db-dir       ? "${home}/.local/share/chainweb-node-baseline/mainnet01"
 , replay-log-file     ? "${home}/Library/Logs/chainweb-node-replay.log"
 , replay-p2p-port     ? 1790
 , replay-service-port ? 1848
@@ -94,17 +94,17 @@ replay-node-options = {
 
 pact-info = {
   branch = "master";
-  rev = "b8636a6f8295ad1b448f8af2a5297284c3e02e14";
-  sha256 = "1696j9lqpd91j9nl3sdmj92zm740h0d4z62caj9axw3l1c464srm";
+  rev = "842fbc4256b3cbbde337dbeaa393b649a26f1574";
+  sha256 = "0sg20svw369v5ibxxhnizfqimvxyjla0afbv8023sqcjsgc1hglc";
 };
 
 pact-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "pact";
   inherit (pact-info) rev sha256;
-  # rev = "b8636a6f8295ad1b448f8af2a5297284c3e02e14";
-  # sha256 = "1696j9lqpd91j9nl3sdmj92zm740h0d4z62caj9axw3l1c464srm";
-  # date = "2023-03-05T21:39:45+01:00";
+  # rev = "842fbc4256b3cbbde337dbeaa393b649a26f1574";
+  # sha256 = "0sg20svw369v5ibxxhnizfqimvxyjla0afbv8023sqcjsgc1hglc";
+  # date = "2023-02-08T12:44:17-07:00";
 };
 
 # pact-src = ~/kadena/pact;
