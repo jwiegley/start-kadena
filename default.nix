@@ -554,6 +554,9 @@ in {
     pact-lsp-drv pact-lsp
     startup-script
     chainweb-node-drv chainweb-node
+    run-chainweb-replay
+    chainweb-data-drv chainweb-data
+    chainweb-mining-client
     startup-chainweb-node startup-chainweb-data
     start-chainweb-node
     run-chainweb-replay
