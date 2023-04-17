@@ -33,8 +33,8 @@ args@{
 
 , replay-db-dir       ? "${home}/.local/share/chainweb-node-baseline/mainnet01"
 , replay-log-file     ? "${home}/Library/Logs/chainweb-node-replay.log"
-, replay-p2p-port     ? 1790
-, replay-service-port ? 1848
+, replay-p2p-port     ? 1791
+, replay-service-port ? 1849
 }:
 
 let
@@ -617,7 +617,8 @@ in {
   inherit
     pact-drv pact
     pact-lsp-drv pact-lsp
-    chainweb-node-drv chainweb-node run-chainweb-replay
+    chainweb-node-drv chainweb-node
+    run-chainweb-replay
     chainweb-data-drv chainweb-data
     chainweb-mining-client
     startup-chainweb-node startup-chainweb-data startup-script
