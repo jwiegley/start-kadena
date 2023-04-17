@@ -550,18 +550,14 @@ EOF
 
 in {
   inherit
+    startup-script
     pact-drv pact
     pact-lsp-drv pact-lsp
-    startup-script
     chainweb-node-drv chainweb-node
+    startup-chainweb-node start-chainweb-node
     run-chainweb-replay
     chainweb-data-drv chainweb-data
-    chainweb-mining-client
-    startup-chainweb-node startup-chainweb-data
-    start-chainweb-node
-    run-chainweb-replay
-    chainweb-data-drv chainweb-data
-    start-chainweb-data
+    startup-chainweb-data start-chainweb-data
     # chainweb-mining-client
     # start-chainweb-mining-client
     start-kadena
