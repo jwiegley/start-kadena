@@ -33,8 +33,8 @@ args@{
 
 , replay-db-dir       ? "${home}/.local/share/chainweb-node-baseline/mainnet01"
 , replay-log-file     ? "${home}/Library/Logs/chainweb-node-replay.log"
-, replay-p2p-port     ? 1790
-, replay-service-port ? 1848
+, replay-p2p-port     ? 1791
+, replay-service-port ? 1849
 }:
 
 let
@@ -43,6 +43,21 @@ let
 #
 # Config and command-line options for chainweb-node
 #
+
+# The must match what is cloned into ./pact
+pact-info = {
+  branch = "master";
+  rev = "9701fbe540913225bf63f99d852b7ce2c21d2764";
+  sha256 = "13lk0hj84270z7spwbbab4ynhwna53jm1b1zpqxys3js08wf8alq";
+};
+
+pact-src = pkgs.fetchFromGitHub {
+  owner = "kadena-io";
+  repo = "pact";
+  rev = "9701fbe540913225bf63f99d852b7ce2c21d2764";
+  sha256 = "13lk0hj84270z7spwbbab4ynhwna53jm1b1zpqxys3js08wf8alq";
+  # date = "2023-02-08T12:44:17-07:00";
+};
 
 primary-node-config = configFile "error" {
   allowReadsInLocal = true;
@@ -92,87 +107,7 @@ replay-node-options = {
 # Source code for Pact, Chainweb and other components
 #
 
-pact-info = {
-  branch = "master";
-  rev = "842fbc4256b3cbbde337dbeaa393b649a26f1574";
-  sha256 = "0sg20svw369v5ibxxhnizfqimvxyjla0afbv8023sqcjsgc1hglc";
-};
-
-pact-src = pkgs.fetchFromGitHub {
-  owner = "kadena-io";
-  repo = "pact";
-  inherit (pact-info) rev sha256;
-  # rev = "842fbc4256b3cbbde337dbeaa393b649a26f1574";
-  # sha256 = "0sg20svw369v5ibxxhnizfqimvxyjla0afbv8023sqcjsgc1hglc";
-  # date = "2023-02-08T12:44:17-07:00";
-};
-
-# pact-src = ~/kadena/pact;
-
-# pact-lsp-src = pkgs.fetchFromGitHub {
-#   owner = "kadena-io";
-#   repo = "pact-lsp";
-#   rev = "913449b9fc4fce09d2e90109adce211dc7cfd220";
-#   sha256 = "1xx6w1a08ihylp485kalklr876fjx8lx3rx030qhnb83x8ixz7ii";
-#   # date = "2023-03-06T08:18:17+01:00";
-# };
-
-pact-lsp-src = ~/kadena/pact-lsp;
-
-chainweb-node-src = pkgs.fetchFromGitHub {
-  owner = "kadena-io";
-  repo = "chainweb-node";
-  rev = "09b4dc65fe02ddaabe65f0ffaf7952fd2ca0c657";
-  sha256 = "1s26lxd18kv27qpl3sb1bm7wmidw0zc4dgj6q83zydsqmc8fp45a";
-  # date = "2023-03-06T12:13:26-08:00";
-};
-
-# chainweb-node-src = ~/kadena/chainweb-node;
-
-chainweb-data-src = pkgs.fetchFromGitHub {
-  owner = "kadena-io";
-  repo = "chainweb-data";
-  rev = "5e21686370166b778f3072e4bb4de779b40b39ee";
-  sha256 = "137rffkv6pwkc3xc2psxfzddhf72abq24m5m5cya74hny5y3zmkv";
-  # date = "2023-02-23T19:21:40+01:00";
-};
-
-chainweb-mining-client-src = pkgs.fetchFromGitHub {
-  owner = "kadena-io";
-  repo = "chainweb-mining-client";
-  rev = "ae6e108ab221157198026f1a4d11976591b4e6ee";
-  sha256 = "0wv3hc83w7ywskzpglfvhr0janaicmld414396b0g3as65xln4p1";
-  # date = "2022-12-19T14:45:49+01:00";
-};
-
-# integration-tests-src = pkgs.fetchFromGitHub {
-#   private = true;
-#   owner = "kadena-io";
-#   repo = "integration-tests";
-#   rev = "b223788d878e8d7c7f7e4e03f114ae61e3976eeb";
-#   sha256 = "011mczhhq7fqk784raa7zg1g9fd2gknph01265hyf4vzmxgr0y6r";
-#   # date = "2022-08-04T20:20:13-07:00";
-# };
-
-# Because this is a private GitHub repository, the simplest thing is to use a
-# local clone.
-integration-tests-src = ~/kadena/repos/integration-tests;
-
-devnet-src = pkgs.fetchFromGitHub {
-  owner = "kadena-io";
-  repo = "devnet";
-  rev = "818fd5c6fca5f3d8d917fa8d7c2d4093c19a642f";
-  sha256 = "19w065m1vbxy92yck4n12s4ghclxcj6w7l2hsb8bylinpm0619c1";
-  # date = "2022-12-15T11:59:24-05:00";
-};
-
-kda-tool = pkgs.callPackage (pkgs.fetchFromGitHub {
-  owner = "kadena-io";
-  repo = "kda-tool";
-  rev = "82276930fa47a0eb47409d562025804b2b40f3cd";
-  sha256 = "1143zjsdcl0qj0b86isb2qjdh06nmvy5gksk27qybjc5fbpp5r58";
-  # date = "2022-12-07T18:47:59-04:00";
-}) {};
+kda-tool = pkgs.callPackage ./kda-tool {};
 
 ##########################################################################
 #
@@ -183,7 +118,7 @@ pact-drv = pkgs.stdenv.mkDerivation rec {
   name = "pact-drv-${version}";
   version = "4.4";
 
-  src = pact-src;
+  src = ./pact;
 
   phases = [ "unpackPhase" "buildPhase" "installPhase" ];
 
@@ -204,7 +139,7 @@ pact-lsp-drv = pkgs.stdenv.mkDerivation rec {
   name = "pact-lsp-drv-${version}";
   version = "4.4";
 
-  src = pact-lsp-src;
+  src = ./pact-lsp;
 
   phases = [ "unpackPhase" "installPhase" ];
 
@@ -220,7 +155,7 @@ chainweb-node-drv = pkgs.stdenv.mkDerivation rec {
   name = "chainweb-node-drv-${version}";
   version = "2.18";
 
-  src = chainweb-node-src;
+  src = ./chainweb-node;
 
   phases = [ "unpackPhase" "buildPhase" "installPhase" ];
 
@@ -248,7 +183,7 @@ chainweb-data-drv = pkgs.stdenv.mkDerivation rec {
   name = "chainweb-data-drv-${version}";
   version = "2.18";
 
-  src = chainweb-data-src;
+  src = ./chainweb-data;
 
   phases = [ "unpackPhase" "buildPhase" "installPhase" ];
 
@@ -265,7 +200,7 @@ chainweb-data-drv = pkgs.stdenv.mkDerivation rec {
 chainweb-data = (import "${chainweb-data-drv}" {}).default;
 
 chainweb-mining-client = pkgs.haskell.lib.compose.justStaticExecutables
-  (pkgs.callPackage chainweb-mining-client-src {});
+  (pkgs.callPackage ./chainweb-mining-client {});
 
 #########################################################################
 #
@@ -375,7 +310,7 @@ start-chainweb-data = with pkgs; stdenv.mkDerivation rec {
   name = "start-chainweb-data-${version}";
   version = "2.18";
 
-  src = chainweb-data-src;
+  src = ./chainweb-data;
 
   buildInputs = [
     postgresql
@@ -400,7 +335,7 @@ start-chainweb-mining-client = with pkgs; stdenv.mkDerivation rec {
   name = "start-chainweb-mining-client-${version}";
   version = "0.5";
 
-  src = chainweb-mining-client-src;
+  src = ./chainweb-mining-client;
 
   buildInputs = [
     chainweb-mining-client
@@ -434,7 +369,7 @@ start-chainweb-node = with pkgs; stdenv.mkDerivation rec {
   name = "start-chainweb-node-${version}";
   version = "2.18";
 
-  src = chainweb-node-src;
+  src = ./chainweb-node;
 
   buildInputs = [
     chainweb-node
@@ -462,7 +397,7 @@ start-kadena = with pkgs; stdenv.mkDerivation rec {
   name = "start-kadena-${version}";
   version = "2.18";
 
-  src = chainweb-data-src;
+  src = ./chainweb-data;
 
   buildInputs = [
     start-chainweb-node
@@ -530,8 +465,8 @@ start-devnet = with pkgs; stdenv.mkDerivation rec {
 
 DEVNET_DIR=$(mktemp -d -t dev-XXX)
 
-cp -p "${devnet-src}"/.env "$DEVNET_DIR"
-cp -pR "${devnet-src}"/* "$DEVNET_DIR"
+cp -p "${./devnet}"/.env "$DEVNET_DIR"
+cp -pR "${./devnet}"/* "$DEVNET_DIR"
 
 DEVNET=$(docker ps --filter 'name=devnet' | wc -l)
 if (( DEVNET < 4 )); then
@@ -553,7 +488,7 @@ integration-tests = with pkgs; stdenv.mkDerivation rec {
   name = "integration-tests-${version}";
   version = "1.0";
 
-  src = integration-tests-src;
+  src = ./integration-tests;
 
   buildInputs = [
     node2nix
@@ -596,8 +531,8 @@ export NODE_PATH=${integration-tests-deps}/lib/node_modules
 mkdir -p "$TESTS"
 
 ln -s "$NODE_PATH" "$TESTS"
-cp -pR "${integration-tests-src}"/.taprc "$TESTS"
-cp -pR "${integration-tests-src}"/* "$TESTS"
+cp -pR "${./integration-tests}"/.taprc "$TESTS"
+cp -pR "${./integration-tests}"/* "$TESTS"
 
 cd "$TESTS"
 
@@ -617,15 +552,17 @@ in {
   inherit
     pact-drv pact
     pact-lsp-drv pact-lsp
-    chainweb-node-drv chainweb-node run-chainweb-replay
-    chainweb-data-drv chainweb-data
-    chainweb-mining-client
-    startup-chainweb-node startup-chainweb-data startup-script
+    startup-script
+    chainweb-node-drv chainweb-node
+    startup-chainweb-node startup-chainweb-data
     start-chainweb-node
+    run-chainweb-replay
+    chainweb-data-drv chainweb-data
     start-chainweb-data
-    start-chainweb-mining-client
+    # chainweb-mining-client
+    # start-chainweb-mining-client
     start-kadena
-    devnet-src start-devnet
+    start-devnet
     # integration-tests run-integration-tests
     kda-tool
     ;

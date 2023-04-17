@@ -1,0 +1,24 @@
+[submodule "pact"]
+	path = pact
+	url = https://github.com/kadena-io/pact
+[submodule "chainweb-node"]
+	path = chainweb-node
+	url = https://github.com/kadena-io/chainweb-node
+[submodule "chainweb-data"]
+	path = chainweb-data
+	url = https://github.com/kadena-io/chainweb-data
+[submodule "pact-lsp"]
+	path = pact-lsp
+	url = https://github.com/kadena-io/pact-lsp
+[submodule "integration-tests"]
+	path = integration-tests
+	url = https://github.com/kadena-io/integration-tests
+[submodule "chainweb-mining-client"]
+	path = chainweb-mining-client
+	url = https://github.com/kadena-io/chainweb-mining-client
+[submodule "devnet"]
+	path = devnet
+	url = https://github.com/kadena-io/devnet
+[submodule "kda-tool"]
+	path = kda-tool
+	url = https://github.com/kadena-io/kda-tool
