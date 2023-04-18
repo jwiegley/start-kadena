@@ -47,8 +47,8 @@ let
 # The must match what is cloned into ./pact
 pact-info = {
   branch = "master";
-  rev = "9701fbe540913225bf63f99d852b7ce2c21d2764";
-  sha256 = "13lk0hj84270z7spwbbab4ynhwna53jm1b1zpqxys3js08wf8alq";
+  rev = "93149757705364e57f385bd5685b0d7abc30b7e2";
+  sha256 = "0zk9cdfz0h33dmqv2ja39l2l8z0vqmgr2v3hhwqp4bzi91li5zbm";
 };
 
 pact-src = pkgs.fetchFromGitHub {
@@ -159,11 +159,16 @@ chainweb-node-drv = pkgs.stdenv.mkDerivation rec {
 
   phases = [ "unpackPhase" "buildPhase" "installPhase" ];
 
+  buildInputs = [ pkgs.perl ];
+
   buildPhase = ''
     sed -i -e 's%"branch": ".*",%"branch": "${pact-info.branch}",%' dep/pact/github.json
     sed -i -e 's%"rev": ".*",%"rev": "${pact-info.rev}",%' dep/pact/github.json
     sed -i -e 's%"sha256": ".*"%"sha256": "${pact-info.sha256}"%' dep/pact/github.json
     cat dep/pact/github.json
+
+    perl -i -pe 's/tag: .*/tag: ${pact-info.rev}/ if /kadena-io\/pact/ .. /^$/;' \
+        cabal.project
   '';
 
   installPhase = ''
