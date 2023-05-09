@@ -47,16 +47,17 @@ let
 # The must match what is cloned into ./pact
 pact-info = {
   branch = "master";
-  rev = "93149757705364e57f385bd5685b0d7abc30b7e2";
-  sha256 = "0zk9cdfz0h33dmqv2ja39l2l8z0vqmgr2v3hhwqp4bzi91li5zbm";
+  rev = "67c5cc99a5e0f110d0eb9dbccea160690df24832";
+  sha256 = "0sax1di8mz7afslxn74m62z4irn3jjgqhmrwjf1kng7jqgbzd48d";
 };
 
+# I only use this definition for getting rev update information.
 pact-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "pact";
-  rev = "9701fbe540913225bf63f99d852b7ce2c21d2764";
-  sha256 = "13lk0hj84270z7spwbbab4ynhwna53jm1b1zpqxys3js08wf8alq";
-  # date = "2023-02-08T12:44:17-07:00";
+  rev = "67c5cc99a5e0f110d0eb9dbccea160690df24832";
+  sha256 = "0sax1di8mz7afslxn74m62z4irn3jjgqhmrwjf1kng7jqgbzd48d";
+  # date = "2023-04-19T20:36:08-07:00";
 };
 
 primary-node-config = configFile "error" {
@@ -116,14 +117,22 @@ kda-tool = pkgs.callPackage ./kda-tool {};
 
 pact-drv = pkgs.stdenv.mkDerivation rec {
   name = "pact-drv-${version}";
-  version = "4.4";
+  version = "4.7";
 
   src = ./pact;
 
   phases = [ "unpackPhase" "buildPhase" "installPhase" ];
 
-  buildPhase = ''
-    cp ${./pact.nix} default.nix
+  preBuild = ''
+    cat > default.nix <<EOF
+(import (
+  fetchTarball {
+    url = "https://github.com/edolstra/flake-compat/archive/35bb57c0c8d8b62bbfd284272c928ceb64ddbde9.tar.gz";
+    sha256 = "1prd9b1xx8c0sfwnyzkspplh30m613j42l1k789s521f4kv4c2z2"; }
+) {
+  src =  ./.;
+}).defaultNix
+EOF
   '';
 
   installPhase = ''
@@ -132,12 +141,11 @@ pact-drv = pkgs.stdenv.mkDerivation rec {
   '';
 };
 
-pact = pkgs.haskell.lib.compose.justStaticExecutables
-  (pkgs.haskell.lib.compose.dontCheck (pkgs.callPackage "${pact-drv}" {}));
+pact = (import "${pact-drv}").default;
 
 pact-lsp-drv = pkgs.stdenv.mkDerivation rec {
   name = "pact-lsp-drv-${version}";
-  version = "4.4";
+  version = "4.7";
 
   src = ./pact-lsp;
 
@@ -178,11 +186,7 @@ chainweb-node-drv = pkgs.stdenv.mkDerivation rec {
 };
 
 chainweb-node = pkgs.haskell.lib.compose.justStaticExecutables
-  ((pkgs.callPackage "${chainweb-node-drv}" {}).overrideAttrs(_: {
-      preBuild = ''
-        sed -i -e 's/2_965_885/2_939_323/' src/Chainweb/Version.hs
-      '';
-    }));
+  (pkgs.callPackage "${chainweb-node-drv}" {});
 
 chainweb-data-drv = pkgs.stdenv.mkDerivation rec {
   name = "chainweb-data-drv-${version}";
