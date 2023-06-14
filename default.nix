@@ -47,16 +47,16 @@ let
 # The must match what is cloned into ./pact
 pact-info = {
   branch = "master";
-  rev = "83c5944991d6edcd34d79f9fbf8e537d060689c6";
-  sha256 = "0l59xi2by6l6gi10r8c437m7ics29215zr0zl1syyr3039vgmv0x";
+  rev = "456aa65ef45596458488ed59e7167621b40e6139";
+  sha256 = "1c252pm7vrvplg1x6s1sslym9bf6nc1nlgz3rh83xkfw8pc62r17";
 };
 
 # I only use this definition for getting rev update information.
 pact-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "pact";
-  rev = "83c5944991d6edcd34d79f9fbf8e537d060689c6";
-  sha256 = "0l59xi2by6l6gi10r8c437m7ics29215zr0zl1syyr3039vgmv0x";
+  rev = "456aa65ef45596458488ed59e7167621b40e6139";
+  sha256 = "1c252pm7vrvplg1x6s1sslym9bf6nc1nlgz3rh83xkfw8pc62r17";
   # date = "2023-04-19T20:36:08-07:00";
 };
 
@@ -117,7 +117,7 @@ kda-tool = pkgs.callPackage ./kda-tool {};
 
 pact-drv = pkgs.stdenv.mkDerivation rec {
   name = "pact-drv-${version}";
-  version = "4.7";
+  version = "4.7.1";
 
   src = ./pact;
 
@@ -145,7 +145,7 @@ pact = (import "${pact-drv}").default;
 
 pact-lsp-drv = pkgs.stdenv.mkDerivation rec {
   name = "pact-lsp-drv-${version}";
-  version = "4.7";
+  version = "4.7.1";
 
   src = ./pact-lsp;
 
@@ -161,23 +161,23 @@ pact-lsp = (import "${pact-lsp-drv}").default;
 
 chainweb-node-drv = pkgs.stdenv.mkDerivation rec {
   name = "chainweb-node-drv-${version}";
-  version = "2.18";
+  version = "2.19.2";
 
   src = ./chainweb-node;
 
   phases = [ "unpackPhase" "buildPhase" "installPhase" ];
 
-  buildInputs = [ pkgs.perl ];
-
-  buildPhase = ''
-    sed -i -e 's%"branch": ".*",%"branch": "${pact-info.branch}",%' dep/pact/github.json
-    sed -i -e 's%"rev": ".*",%"rev": "${pact-info.rev}",%' dep/pact/github.json
-    sed -i -e 's%"sha256": ".*"%"sha256": "${pact-info.sha256}"%' dep/pact/github.json
-    cat dep/pact/github.json
-
-    perl -i -pe 's/tag: .*/tag: ${pact-info.rev}/ if /kadena-io\/pact/ .. /^$/;' \
-        cabal.project
-  '';
+#   preBuild = ''
+#     cat > default.nix <<EOF
+# (import (
+#   fetchTarball {
+#     url = "https://github.com/edolstra/flake-compat/archive/35bb57c0c8d8b62bbfd284272c928ceb64ddbde9.tar.gz";
+#     sha256 = "1prd9b1xx8c0sfwnyzkspplh30m613j42l1k789s521f4kv4c2z2"; }
+# ) {
+#   src =  ./.;
+# }).defaultNix
+# EOF
+#   '';
 
   installPhase = ''
     mkdir -p $out
@@ -185,12 +185,11 @@ chainweb-node-drv = pkgs.stdenv.mkDerivation rec {
   '';
 };
 
-chainweb-node = pkgs.haskell.lib.compose.justStaticExecutables
-  (pkgs.callPackage "${chainweb-node-drv}" {});
+chainweb-node = (import "${chainweb-node-drv}").default;
 
 chainweb-data-drv = pkgs.stdenv.mkDerivation rec {
   name = "chainweb-data-drv-${version}";
-  version = "2.18";
+  version = "2.19.2";
 
   src = ./chainweb-data;
 
@@ -317,7 +316,7 @@ exec ${chainweb-data}/bin/chainweb-data server \
 
 start-chainweb-data = with pkgs; stdenv.mkDerivation rec {
   name = "start-chainweb-data-${version}";
-  version = "2.18";
+  version = "2.19.2";
 
   src = ./chainweb-data;
 
@@ -376,7 +375,7 @@ exec ${chainweb-node}/bin/chainweb-node \
 
 start-chainweb-node = with pkgs; stdenv.mkDerivation rec {
   name = "start-chainweb-node-${version}";
-  version = "2.18";
+  version = "2.19.2";
 
   src = ./chainweb-node;
 
@@ -404,7 +403,7 @@ exec ${tmux}/bin/tmux new-session \; \
 
 start-kadena = with pkgs; stdenv.mkDerivation rec {
   name = "start-kadena-${version}";
-  version = "2.18";
+  version = "2.19.2";
 
   src = ./chainweb-data;
 
