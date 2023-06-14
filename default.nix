@@ -159,33 +159,7 @@ pact-lsp-drv = pkgs.stdenv.mkDerivation rec {
 
 pact-lsp = (import "${pact-lsp-drv}").default;
 
-chainweb-node-drv = pkgs.stdenv.mkDerivation rec {
-  name = "chainweb-node-drv-${version}";
-  version = "2.19.2";
-
-  src = ./chainweb-node;
-
-  phases = [ "unpackPhase" "buildPhase" "installPhase" ];
-
-#   preBuild = ''
-#     cat > default.nix <<EOF
-# (import (
-#   fetchTarball {
-#     url = "https://github.com/edolstra/flake-compat/archive/35bb57c0c8d8b62bbfd284272c928ceb64ddbde9.tar.gz";
-#     sha256 = "1prd9b1xx8c0sfwnyzkspplh30m613j42l1k789s521f4kv4c2z2"; }
-# ) {
-#   src =  ./.;
-# }).defaultNix
-# EOF
-#   '';
-
-  installPhase = ''
-    mkdir -p $out
-    cp -pR * $out
-  '';
-};
-
-chainweb-node = (import "${chainweb-node-drv}").default;
+chainweb-node = (import ./chainweb-node).default;
 
 chainweb-data-drv = pkgs.stdenv.mkDerivation rec {
   name = "chainweb-data-drv-${version}";
@@ -561,7 +535,7 @@ in {
     startup-script
     pact-drv pact
     pact-lsp-drv pact-lsp
-    chainweb-node-drv chainweb-node
+    chainweb-node
     startup-chainweb-node start-chainweb-node
     run-chainweb-replay
     chainweb-data-drv chainweb-data
