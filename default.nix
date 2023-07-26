@@ -159,7 +159,7 @@ pact-lsp-drv = pkgs.stdenv.mkDerivation rec {
 
 pact-lsp = (import "${pact-lsp-drv}").default;
 
-chainweb-node = (import ./chainweb-node).default;
+chainweb-node = (import ./chainweb-node {}).default;
 
 chainweb-data-drv = pkgs.stdenv.mkDerivation rec {
   name = "chainweb-data-drv-${version}";
