@@ -108,7 +108,7 @@ replay-node-options = {
 # Source code for Pact, Chainweb and other components
 #
 
-kda-tool = pkgs.callPackage ./kda-tool {};
+kda-tool = (import ./kda-tool);
 
 ##########################################################################
 #
