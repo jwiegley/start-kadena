@@ -268,7 +268,7 @@ fi
 
 cd $DATA
 
-if [[ ! -f scripts/richlist.sh ]]; then
+if [[ ! -f scripts/richlist.sh && -f ${src}/scripts/richlist.sh ]]; then
     mkdir -p scripts
     cp ${src}/scripts/richlist.sh scripts/richlist.sh
 fi
