@@ -31,7 +31,7 @@ args@{
 , node-p2p-port       ? 1790
 , node-service-port   ? 1848
 
-, replay-db-dir       ? "${home}/.local/share/chainweb-node-baseline/mainnet01"
+, replay-db-dir       ? "/Volumes/studio/ChainState/kadena/chainweb-node/mainnet01"
 , replay-log-file     ? "${home}/Library/Logs/chainweb-node-replay.log"
 , replay-p2p-port     ? 1791
 , replay-service-port ? 1849
@@ -47,16 +47,16 @@ let
 # The must match what is cloned into ./pact
 pact-info = {
   branch = "master";
-  rev = "397ebc9690279aac014339dc17bddfa0246bfda7";
-  sha256 = "1b8n5gk4v9ffpp1kyjhrd8a8qigpc9n7lm5cwjcdbb8h3pqpqf1s";
+  rev = "a1c7906efbf32095883e71594a53a21162fbe5a7";
+  sha256 = "1m5ql0s66bjd09sxb325zcwnaw67z45jj0aa1m9wssvi57z37n1j";
 };
 
 # I only use this definition for getting rev update information.
 pact-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "pact";
-  rev = "397ebc9690279aac014339dc17bddfa0246bfda7";
-  sha256 = "1b8n5gk4v9ffpp1kyjhrd8a8qigpc9n7lm5cwjcdbb8h3pqpqf1s";
+  rev = "a1c7906efbf32095883e71594a53a21162fbe5a7";
+  sha256 = "1m5ql0s66bjd09sxb325zcwnaw67z45jj0aa1m9wssvi57z37n1j";
   # date = "2023-04-19T20:36:08-07:00";
 };
 
