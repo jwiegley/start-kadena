@@ -28,6 +28,7 @@ args@{
 , node-log-file       ? "${home}/Library/Logs/chainweb-node.log"
 , data-db-dir         ? "${home}/.local/share/chainweb-data"
 , data-log-file       ? "${home}/Library/Logs/chainweb-data.log"
+, node-p2p-hostname   ? "newartisans.hopto.org"
 , node-p2p-port       ? 1790
 , node-service-port   ? 1848
 
@@ -72,6 +73,7 @@ primary-node-options = {
   config-file = "${primary-node-config}";
   database-directory = node-db-dir;
   disable-node-mining = true;
+  p2p-hostname = node-p2p-hostname;
   p2p-port = node-p2p-port;
   service-port = node-service-port;
 };
@@ -99,6 +101,7 @@ replay-node-options = {
   config-file = "${replay-node-config}";
   database-directory = replay-db-dir;
   disable-node-mining = true;
+  p2p-hostname = "127.0.0.1";
   p2p-port = replay-p2p-port;
   service-port = replay-service-port;
 };
@@ -235,6 +238,7 @@ options-to-str = opts: with pkgs.lib;
     # copy the entire directory into the Nix store.
   + "--database-directory '" + opts.database-directory + "' "
   + optionalString opts.disable-node-mining "--disable-node-mining "
+  + "--p2p-hostname ${builtins.toString opts.p2p-hostname} "
   + "--p2p-port ${builtins.toString opts.p2p-port} "
   + "--service-port ${builtins.toString opts.service-port} "
 ;
