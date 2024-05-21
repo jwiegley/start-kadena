@@ -12,7 +12,7 @@
 	url = https://github.com/kadena-io/pact-lsp
 [submodule "integration-tests"]
 	path = integration-tests
-	url = https://github.com/kadena-io/integration-tests
+	url = git@github.com:kadena-io/integration-tests
 [submodule "chainweb-mining-client"]
 	path = chainweb-mining-client
 	url = https://github.com/kadena-io/chainweb-mining-client
