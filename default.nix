@@ -48,18 +48,16 @@ let
 # The must match what is cloned into ./pact
 pact-info = {
   branch = "master";
-  rev = "058da315f7b427ad5dcaa334683600a1f7fd9588
-";
-  sha256 = "";
+  rev = "058da315f7b427ad5dcaa334683600a1f7fd9588";
+  sha256 = "105jbsvrjv2zxsazd3vcbkml99w26xqimwjybfiznkg21456d6hn";
 };
 
 # I only use this definition for getting rev update information.
 pact-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "pact";
-  rev = "058da315f7b427ad5dcaa334683600a1f7fd9588
-";
-  sha256 = "";
+  rev = "058da315f7b427ad5dcaa334683600a1f7fd9588";
+  sha256 = "105jbsvrjv2zxsazd3vcbkml99w26xqimwjybfiznkg21456d6hn";
   # date = "2023-04-19T20:36:08-07:00";
 };
 
