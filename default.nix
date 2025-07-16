@@ -48,16 +48,32 @@ let
 # The must match what is cloned into ./pact
 pact-info = {
   branch = "master";
-  rev = "1027a1f5fd0439c58522921e3a0532c4f5867a24";
-  sha256 = "18xgvzb3p8chch85747ln9a2191df09vwwrv9v3njr2h69n3rhxj";
+  rev = "d4f03045df6ba5178a76e534d619b6233ad1c659";
+  sha256 = "1q4b3i606davn6iyk6az2q7cw5f7llxjhkbqyzw4bsxhrkah7fch";
 };
 
 # I only use this definition for getting rev update information.
 pact-src = pkgs.fetchFromGitHub {
   owner = "kadena-io";
   repo = "pact";
-  rev = "1027a1f5fd0439c58522921e3a0532c4f5867a24";
-  sha256 = "18xgvzb3p8chch85747ln9a2191df09vwwrv9v3njr2h69n3rhxj";
+  rev = "d4f03045df6ba5178a76e534d619b6233ad1c659";
+  sha256 = "1q4b3i606davn6iyk6az2q7cw5f7llxjhkbqyzw4bsxhrkah7fch";
+  # date = "2023-04-19T20:36:08-07:00";
+};
+
+# The must match what is cloned into ./pact
+pact-5-info = {
+  branch = "master";
+  rev = "2d7605e8139be57cedacf303cf67f5a364ea5320";
+  sha256 = "148hx36kjfw5xmqnrrznjqn291rmzclpb8bcmmmd9inj4d0vpc3r";
+};
+
+# I only use this definition for getting rev update information.
+pact-5-src = pkgs.fetchFromGitHub {
+  owner = "kadena-io";
+  repo = "pact-5";
+  rev = "2d7605e8139be57cedacf303cf67f5a364ea5320";
+  sha256 = "148hx36kjfw5xmqnrrznjqn291rmzclpb8bcmmmd9inj4d0vpc3r";
   # date = "2023-04-19T20:36:08-07:00";
 };
 
@@ -145,6 +161,34 @@ EOF
 };
 
 pact = (import "${pact-drv}").default;
+
+pact-5-drv = pkgs.stdenv.mkDerivation rec {
+  name = "pact-5-drv-${version}";
+  version = "5.3.0";
+
+  src = ./pact-5;
+
+  phases = [ "unpackPhase" "buildPhase" "installPhase" ];
+
+  preBuild = ''
+    cat > default.nix <<EOF
+(import (
+  fetchTarball {
+    url = "https://github.com/edolstra/flake-compat/archive/35bb57c0c8d8b62bbfd284272c928ceb64ddbde9.tar.gz";
+    sha256 = "1prd9b1xx8c0sfwnyzkspplh30m613j42l1k789s521f4kv4c2z2"; }
+) {
+  src =  ./.;
+}).defaultNix
+EOF
+  '';
+
+  installPhase = ''
+    mkdir -p $out
+    cp -pR * $out
+  '';
+};
+
+pact-5 = (import "${pact-5-drv}").default;
 
 pact-lsp-drv = pkgs.stdenv.mkDerivation rec {
   name = "pact-lsp-drv-${version}";
@@ -538,6 +582,7 @@ in {
   inherit
     startup-script
     pact-drv pact
+    pact-5-drv pact-5
     pact-lsp-drv pact-lsp
     chainweb-node
     startup-chainweb-node start-chainweb-node

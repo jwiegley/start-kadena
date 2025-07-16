@@ -22,3 +22,6 @@
 [submodule "kda-tool"]
 	path = kda-tool
 	url = https://github.com/kadena-io/kda-tool
+[submodule "pact-5"]
+	path = pact-5
+	url = https://github.com/kadena-io/pact-5
