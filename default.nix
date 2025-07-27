@@ -28,7 +28,7 @@ args@{
 , node-log-file       ? "${home}/Library/Logs/chainweb-node.log"
 , data-db-dir         ? "${home}/.local/share/chainweb-data"
 , data-log-file       ? "${home}/Library/Logs/chainweb-data.log"
-, node-p2p-hostname   ? "newartisans.hopto.org"
+, node-p2p-hostname   ? "home.newartisans.com"
 , node-p2p-port       ? 1790
 , node-service-port   ? 1848
 
