@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
-volcopy -aP --delete-before /Volumes/studio/ChainState/kadena/chainweb-node/ \
-        vulcan:/tank/Backups/chainweb/
-while true ; do date ; eval $(nix-build -Q -j10 -A start-chainweb-node)/bin/start-chainweb-node || echo "Failed with exit code $?"; done
+while true ; do
+    date
+    eval $(nix-build -Q -j10 -A start-chainweb-node)/bin/start-chainweb-node \
+        || echo "Failed with exit code $?"
+done
